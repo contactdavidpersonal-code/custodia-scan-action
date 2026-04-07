@@ -55,7 +55,7 @@ jobs:
         with:
           fetch-depth: 0   # required for diff mode
 
-      - uses: custodia/custodia-scan-action@v1
+      - uses: df3-custodia/custodia-scan-action@v1
         with:
           api-key: ${{ secrets.CUSTODIA_API_KEY }}
 ```
@@ -89,7 +89,7 @@ That's it. The action runs on every push to main and every pull request.
 ### Only fail on CRITICAL findings
 
 ```yaml
-- uses: custodia/custodia-scan-action@v1
+- uses: df3-custodia/custodia-scan-action@v1
   with:
     api-key: ${{ secrets.CUSTODIA_API_KEY }}
     fail-on: CRITICAL
@@ -98,7 +98,7 @@ That's it. The action runs on every push to main and every pull request.
 ### Always run a full scan (no diff)
 
 ```yaml
-- uses: custodia/custodia-scan-action@v1
+- uses: df3-custodia/custodia-scan-action@v1
   with:
     api-key: ${{ secrets.CUSTODIA_API_KEY }}
     mode: full
@@ -107,7 +107,7 @@ That's it. The action runs on every push to main and every pull request.
 ### Scan a subdirectory
 
 ```yaml
-- uses: custodia/custodia-scan-action@v1
+- uses: df3-custodia/custodia-scan-action@v1
   with:
     api-key: ${{ secrets.CUSTODIA_API_KEY }}
     path: ./backend
@@ -116,7 +116,7 @@ That's it. The action runs on every push to main and every pull request.
 ### Use the score in a downstream step
 
 ```yaml
-- uses: custodia/custodia-scan-action@v1
+- uses: df3-custodia/custodia-scan-action@v1
   id: scan
   with:
     api-key: ${{ secrets.CUSTODIA_API_KEY }}
@@ -128,7 +128,7 @@ That's it. The action runs on every push to main and every pull request.
 ### Non-blocking scan (report but never fail the build)
 
 ```yaml
-- uses: custodia/custodia-scan-action@v1
+- uses: df3-custodia/custodia-scan-action@v1
   with:
     api-key: ${{ secrets.CUSTODIA_API_KEY }}
     fail-on: none
