@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://custodia.dev">
+    <img src="https://custodia.dev/custodia_shield_transparent.png" alt="Custodia Security Scan" width="120" />
+  </a>
+</p>
+
 # Custodia Security Scan
 
 ### Ship code. Not vulnerabilities.
