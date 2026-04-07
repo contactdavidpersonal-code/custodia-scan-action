@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://custodia.dev">
-    <img src="https://custodia.dev/custodia_shield_transparent.png" alt="Custodia Security Scan" width="120" />
+    <img src="https://raw.githubusercontent.com/contactdavidpersonal-code/custodia-scan-action/main/logo.png" alt="Custodia Security Scan" width="100" />
   </a>
 </p>
 
