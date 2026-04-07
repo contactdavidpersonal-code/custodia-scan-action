@@ -1,40 +1,43 @@
 # Custodia Security Scan
 
-[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-Custodia%20Security%20Scan-blue?logo=github)](https://github.com/marketplace/actions/custodia-security-scan)
-[![Custodia.dev Score: 99/100](https://custodia.dev/api/reports/a080d199-ba29-462b-b855-87d409d519dc/badge)](https://custodia.dev/reports/a080d199-ba29-462b-b855-87d409d519dc)
+### Ship code. Not vulnerabilities.
 
-**OWASP Top 10 + AI security scanning on every push and pull request.** Maps findings to SOC 2, NIST CSF, EU AI Act, and ISO 42001. Zero config. Free tier included.
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Custodia%20Security%20Scan-blue?logo=github&logoColor=white)](https://github.com/marketplace/actions/custodia-security-scan)
+[![Latest Release](https://img.shields.io/github/v/release/contactdavidpersonal-code/custodia-scan-action?label=version&color=00e5ff)](https://github.com/contactdavidpersonal-code/custodia-scan-action/releases)
+[![Free Tier Available](https://img.shields.io/badge/free%20tier-included-brightgreen)](https://custodia.dev)
+[![Custodia Score: 99/100](https://custodia.dev/api/reports/a080d199-ba29-462b-b855-87d409d519dc/badge)](https://custodia.dev/reports/a080d199-ba29-462b-b855-87d409d519dc)
 
----
-
-## What It Does
-
-- **OWASP Top 10** — auth issues, injection flaws, XSS, hardcoded secrets, misconfigured components
-- **AI Security (OWASP LLM Top 10)** — prompt injection, insecure output handling, excessive agency, model DoS
-- **Dependency CVEs** — OSV.dev powered; finds vulnerable packages in npm, pip, gem, cargo, go
-- **Compliance mapping** — flags map to SOC 2 CC controls, NIST CSF, CWE, EU AI Act articles
-- **Diff mode** — on pull requests, only changed files are scanned (fast, quota-efficient)
-- **Fails on severity threshold** — configurable; defaults to failing on HIGH or CRITICAL findings
-- **Artifacts** — uploads `.custodia-reports/` as a workflow artifact on every run
+OWASP Top 10 + AI security scanning on every push and pull request — with compliance mapping to SOC 2, NIST CSF, EU AI Act, and ISO 42001. Two-line setup. No config required.
 
 ---
 
-## Quick Setup
+---
 
-### 1. Get a free API key
+## Why Custodia
 
-Sign up at **[custodia.dev](https://custodia.dev)** (free tier — 3 full scans + 5 diff scans/month, no card required).
+Most teams only do security reviews when something breaks. Custodia makes security a first-class part of your CI pipeline — every commit, every PR, automatically.
 
-Copy your API key from the dashboard under **Identity & Access → Generate Key**.
+- **Catches what linters miss** — auth flaws, injection vectors, hardcoded secrets, insecure dependencies
+- **Not just rules — AI reasoning** — a 5-stage pipeline verifies every CRITICAL finding before flagging it, keeping false positive rates low
+- **PR-ready diff mode** — only changed files are scanned on pull requests; runs in seconds
+- **Compliance out of the box** — findings map to SOC 2 controls, CWE IDs, and OWASP categories automatically
+- **No per-seat pricing** — one subscription, the whole team
 
-### 2. Add the secret
+---
 
-In your GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**
+## Quick Setup (2 steps)
 
-- Name: `CUSTODIA_API_KEY`
-- Value: your API key
+### Step 1 — Add your API key as a secret
 
-### 3. Add the workflow
+Get a free key at **[custodia.dev](https://custodia.dev)** (no card required). Then in your repo:
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+| Name | Value |
+|---|---|
+| `CUSTODIA_API_KEY` | your key from the dashboard |
+
+### Step 2 — Add the workflow
 
 Create `.github/workflows/custodia.yml`:
 
@@ -53,91 +56,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # required for diff mode
+          fetch-depth: 0   # required for diff mode on PRs
 
       - uses: contactdavidpersonal-code/custodia-scan-action@v1
         with:
           api-key: ${{ secrets.CUSTODIA_API_KEY }}
 ```
 
-That's it. The action runs on every push to main and every pull request.
-
----
-
-## Configuration
-
-| Input | Description | Default |
-|---|---|---|
-| `api-key` | Custodia API key (required) | — |
-| `mode` | `auto` — diff on PRs, full on push. `diff` — always diff. `full` — always full. | `auto` |
-| `path` | Directory to scan | `.` |
-| `fail-on` | Fail if findings at this severity exist: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `none` | `HIGH` |
-| `args` | Extra arguments passed to `custodia scan` | `''` |
-
-### Outputs
-
-| Output | Description |
-|---|---|
-| `score` | Security score 0–100 |
-| `findings-count` | Total findings |
-| `report-path` | Path to generated Markdown report |
-
----
-
-## Examples
-
-### Only fail on CRITICAL findings
-
-```yaml
-- uses: contactdavidpersonal-code/custodia-scan-action@v1
-  with:
-    api-key: ${{ secrets.CUSTODIA_API_KEY }}
-    fail-on: CRITICAL
-```
-
-### Always run a full scan (no diff)
-
-```yaml
-- uses: contactdavidpersonal-code/custodia-scan-action@v1
-  with:
-    api-key: ${{ secrets.CUSTODIA_API_KEY }}
-    mode: full
-```
-
-### Scan a subdirectory
-
-```yaml
-- uses: contactdavidpersonal-code/custodia-scan-action@v1
-  with:
-    api-key: ${{ secrets.CUSTODIA_API_KEY }}
-    path: ./backend
-```
-
-### Use the score in a downstream step
-
-```yaml
-- uses: contactdavidpersonal-code/custodia-scan-action@v1
-  id: scan
-  with:
-    api-key: ${{ secrets.CUSTODIA_API_KEY }}
-
-- name: Print score
-  run: echo "Security score: ${{ steps.scan.outputs.score }}"
-```
-
-### Non-blocking scan (report but never fail the build)
-
-```yaml
-- uses: contactdavidpersonal-code/custodia-scan-action@v1
-  with:
-    api-key: ${{ secrets.CUSTODIA_API_KEY }}
-    fail-on: none
-  continue-on-error: true
-```
+Done. Every push to `main` gets a full scan. Every PR gets a fast diff scan on only the changed files.
 
 ---
 
 ## What the Output Looks Like
+
+Findings appear as native **GitHub Actions annotations** — directly inline on the PR diff:
+
+```
+::error file=src/config/db.ts::  [CRITICAL] SEC-01 — Hardcoded database password  (CWE-798 · SOC2 CC6.1)
+::error file=src/routes/admin.ts::  [HIGH] AUTH-02 — Missing authentication on /admin/*  (CWE-306 · OWASP A01)
+::warning file=src/middleware/::  [MEDIUM] LOG-01 — No security event logging  (SOC2 CC7.2)
+```
+
+Plus a full terminal summary:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -157,60 +97,134 @@ That's it. The action runs on every push to main and every pull request.
 
 ---
 
-## Pricing
+## Configuration
 
-| Plan | Price | Full Scans | Diff Scans |
-|---|---|---|---|
-| **Free** | $0/mo | 3/mo | 5/mo |
-| **Dev** | $39/mo | 10/mo | 60/mo |
-| **Pro** | $89/mo | 25/mo | 150/mo |
-| **Business** | $249/mo | 60/mo | 400/mo |
+### Inputs
 
-No per-seat pricing. One subscription covers your entire team.
+| Input | Description | Default |
+|---|---|---|
+| `api-key` | **Required.** Your Custodia API key | — |
+| `mode` | `auto` — diff on PRs, full on push · `diff` — always diff · `full` — always full | `auto` |
+| `path` | Directory to scan | `.` |
+| `fail-on` | Fail the build if findings exist at this severity or above: `CRITICAL` · `HIGH` · `MEDIUM` · `LOW` · `none` | `HIGH` |
+| `args` | Extra arguments passed directly to `custodia scan` | `''` |
 
-**Diff scans are the right mode for CI/CD** — only changed files are sent, they run in seconds, and they count against the lower quota. A team pushing 10–15 times per week easily stays on the free tier.
+### Outputs
 
-[See full pricing and features →](https://custodia.dev/billing)
+| Output | Description |
+|---|---|
+| `score` | Security score (0–100) |
+| `findings-count` | Total number of findings |
+| `report-path` | Path to the generated Markdown report artifact |
 
 ---
 
-## Compliance Coverage
+## Examples
 
-| Framework | What's covered |
+### Only block on CRITICAL findings
+
+```yaml
+- uses: contactdavidpersonal-code/custodia-scan-action@v1
+  with:
+    api-key: ${{ secrets.CUSTODIA_API_KEY }}
+    fail-on: CRITICAL
+```
+
+### Scan a subdirectory (monorepos)
+
+```yaml
+- uses: contactdavidpersonal-code/custodia-scan-action@v1
+  with:
+    api-key: ${{ secrets.CUSTODIA_API_KEY }}
+    path: ./backend
+```
+
+### Use the score as a gate in a downstream step
+
+```yaml
+- uses: contactdavidpersonal-code/custodia-scan-action@v1
+  id: scan
+  with:
+    api-key: ${{ secrets.CUSTODIA_API_KEY }}
+
+- name: Enforce score threshold
+  run: |
+    if [ "${{ steps.scan.outputs.score }}" -lt "70" ]; then
+      echo "Security score below 70 — blocking merge"
+      exit 1
+    fi
+```
+
+### Non-blocking scan (report only, never fail the build)
+
+```yaml
+- uses: contactdavidpersonal-code/custodia-scan-action@v1
+  with:
+    api-key: ${{ secrets.CUSTODIA_API_KEY }}
+    fail-on: none
+```
+
+---
+
+## Coverage
+
+| Category | What's scanned |
 |---|---|
-| **OWASP Top 10** | A01–A10 (all categories) |
-| **OWASP LLM Top 10** | LLM01–LLM10 (AI/ML security) |
-| **SOC 2 TSC** | CC1–CC9 (Common Criteria) — Dev+ |
-| **NIST CSF** | Identify, Protect, Detect, Respond — Dev+ |
-| **EU AI Act** | Art.9, Art.14, Art.52 — Pro+ |
-| **ISO 42001** | A.6–A.10 AI management — Pro+ |
+| **OWASP Top 10** | A01 Broken Access Control, A02 Crypto Failures, A03 Injection, A04 Insecure Design, A05–A10 |
+| **OWASP LLM Top 10** | Prompt injection, insecure output handling, excessive agency, model DoS, supply chain |
+| **Dependency CVEs** | OSV.dev-backed; npm, pip, gem, cargo, go.mod |
+| **Secrets** | Hardcoded keys, tokens, passwords, connection strings |
+| **SOC 2 TSC** | CC1–CC9 Common Criteria mapping (Dev+ plans) |
+| **NIST CSF** | Identify · Protect · Detect · Respond (Dev+ plans) |
+| **EU AI Act** | Art. 9, 14, 52 (Pro+ plans) |
+| **ISO 42001** | A.6–A.10 AI management (Pro+ plans) |
 | **CWE Top 25** | All scans |
+
+---
+
+## Pricing
+
+No per-seat pricing. One subscription covers everyone on your team.
+
+| Plan | Price | Full Scans / mo | Diff Scans / mo |
+|---|---|---|---|
+| **Free** | $0 | 3 | 5 |
+| **Dev** | $39 | 10 | 60 |
+| **Pro** | $89 | 25 | 150 |
+| **Business** | $249 | 60 | 400 |
+
+**Diff scans are built for CI/CD.** Only changed files are sent, they complete in seconds, and they count against the lower diff quota. A team running 10–15 PRs/week easily stays on the free tier.
+
+[See full pricing →](https://custodia.dev/billing)
 
 ---
 
 ## FAQ
 
-**Does this work with private repos?**  
-Yes — the CLI only reads files in the checked-out workspace. No code is stored permanently.
+**Does this work with private repos?**
+The CLI reads files in the checked-out workspace and sends them to the Custodia API for analysis. No code is stored permanently.
 
-**How many scans will a busy CI pipeline use?**  
-Diff scans (the default on PRs) are quota-efficient. A team with 50 pull requests per month comfortably runs on the Dev plan (60 diff scans/mo).
+**How many scans will a busy CI pipeline use?**
+PRs use diff scans (quota-efficient). A team with 50 pull requests per month comfortably runs on the Dev plan (60 diff scans/mo).
 
-**Does it support monorepos?**  
-Yes — use the `path` input to point at a subdirectory. Run multiple instances of the action for different services.
+**Does it support monorepos?**
+Yes — use the `path` input to point at a subdirectory. Run multiple action steps for different services.
 
-**Which languages are supported?**  
+**Which languages are supported?**
 JavaScript/TypeScript, Python, Ruby, Go, Rust, Java, PHP, and more. Language detection is automatic.
 
-**What about false positives?**  
-The 5-stage AI pipeline includes a dedicated critical verifier (Stage 2.5) that re-checks every CRITICAL finding and downgrades unconfirmed ones to HIGH. False positive rate is significantly lower than rule-based tools.
+**What about false positives?**
+The pipeline includes a dedicated CRITICAL verifier stage that re-checks every critical finding and downgrades unconfirmed ones before the report is returned. False positive rate is significantly lower than rule-based scanners.
+
+**Can I use this with a self-hosted runner?**
+Yes — as long as the runner has internet access and Node.js ≥18.
 
 ---
 
 ## Links
 
-- [Dashboard & API keys](https://custodia.dev/dashboard)
-- [Docs & CLI reference](https://custodia.dev/help)
+- [Get a free API key](https://custodia.dev/dashboard)
+- [CLI reference & docs](https://custodia.dev/help)
 - [Pricing](https://custodia.dev/billing)
 - [Blog](https://custodia.dev/blog)
 - [custodia.dev](https://custodia.dev)
