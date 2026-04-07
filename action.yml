@@ -1,0 +1,88 @@
+name: 'Custodia Security Scan'
+description: 'OWASP Top 10 + AI security scanning with compliance mapping (SOC 2, NIST, EU AI Act). No per-seat pricing, no config required.'
+author: 'Custodia.dev'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  api-key:
+    description: 'Your Custodia API key. Store as a repository secret: CUSTODIA_API_KEY'
+    required: true
+
+  mode:
+    description: '"diff" scans only changed files (fast, quota-efficient). "full" scans the entire repo. Default: diff on pull_request, full on push to main/master.'
+    required: false
+    default: 'auto'
+
+  path:
+    description: 'Path to scan. Defaults to the repository root.'
+    required: false
+    default: '.'
+
+  fail-on:
+    description: 'Fail the job if findings at this severity or above are found. Options: CRITICAL, HIGH, MEDIUM, LOW, none. Default: HIGH'
+    required: false
+    default: 'HIGH'
+
+  args:
+    description: 'Additional arguments to pass to custodia scan (e.g. "--no-cache")'
+    required: false
+    default: ''
+
+outputs:
+  score:
+    description: 'Security score (0–100)'
+
+  findings-count:
+    description: 'Total number of findings'
+
+  report-path:
+    description: 'Path to the generated Markdown report'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Custodia CLI
+      shell: bash
+      run: npm install -g @custodia/cli@latest
+
+    - name: Determine scan mode
+      id: mode
+      shell: bash
+      run: |
+        if [ "${{ inputs.mode }}" = "auto" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "mode=--diff" >> $GITHUB_OUTPUT
+          else
+            echo "mode=" >> $GITHUB_OUTPUT
+          fi
+        elif [ "${{ inputs.mode }}" = "diff" ]; then
+          echo "mode=--diff" >> $GITHUB_OUTPUT
+        else
+          echo "mode=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run Custodia security scan
+      shell: bash
+      env:
+        CUSTODIA_API_KEY: ${{ inputs.api-key }}
+      run: |
+        custodia scan ${{ inputs.path }} ${{ steps.mode.outputs.mode }} ${{ inputs.args }} \
+          --fail-on ${{ inputs.fail-on }} \
+          --output-format github-actions
+
+    - name: Upload report artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: custodia-security-report
+        path: .custodia-reports/
+        if-no-files-found: ignore
+        retention-days: 30
